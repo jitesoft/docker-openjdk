@@ -1,0 +1,27 @@
+stages:
+  - build
+
+variables:
+  image_name: jitesoft/openjdk
+
+build:
+  stage: build
+  image: docker:latest
+  services:
+    - docker:dind
+  before_script:
+    - echo ${CI_JOB_TOKEN} | docker login -u gitlab-ci-token registry.gitlab.com --password-stdin
+    - echo ${DOCKER_HUB_PASSWORD} | docker login -u ${DOCKER_HUB_USER} --password-stdin
+  script:
+    - docker build -t ${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHA} .
+    - TAGS="latest eap 13"
+    - |
+      for tag in $TAGS; do
+        docker tag ${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHA} ${image_name}:${tag}
+        docker push ${image_name}:${tag}
+      done
+    - docker tag ${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHA} ${CI_REGISTRY_IMAGE}:latest
+    - docker push ${CI_REGISTRY_IMAGE}:tag
+    - docker push ${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHA}
+  tags:
+    - jitesoft
