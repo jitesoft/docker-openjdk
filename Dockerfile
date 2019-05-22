@@ -10,16 +10,14 @@ ENV JAVA_HOME="/jdk" \
     LANG="C.UTF-8" \
     PATH="$PATH:/jdk/bin"
 
-RUN apk add --no-cache --virtual .build tar curl \
- && curl -OsS https://download.java.net/java/early_access/alpine/19/binaries/${JAVA_FILE} \
- && curl -OsS https://download.java.net/java/early_access/alpine/19/binaries/${JAVA_FILE}.sha256 \
- && echo "$(cat ${JAVA_FILE}.sha256) */${JAVA_FILE}" | sha256sum -c - \
- && tar -xzf ${JAVA_FILE} \
- && mv jdk-13 jdk \
- && rm ${JAVA_FILE} ${JAVA_FILE}.sha256 \
+RUN wget -O /openjdk.tar.gz https://download.java.net/java/early_access/alpine/19/binaries/${JAVA_FILE} \
+ && wget -qO- https://download.java.net/java/early_access/alpine/19/binaries/${JAVA_FILE}.sha256 | xargs printf "%s */openjdk.tar.gz" | sha256sum -c - \
+ && mkdir /jdk \
+ && tar --extract --file /openjdk.tar.gz --directory=/jdk --strip-components 1 \
+ && rm /openjdk.tar.gz \
  # Memory fix.
- && java -Xshare:dump \
- && apk del .build
-
+ && java -Xshare:dump
 
 CMD [ "jshell" ]
+
+
