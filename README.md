@@ -8,4 +8,3 @@ Tags:
 
 
 Image can be found at  [GitLab](https://gitlab.com/jitesoft/dockerfiles/openjdk).
-
