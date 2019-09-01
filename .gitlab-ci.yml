@@ -1,28 +1,23 @@
 stages:
   - build
 
-variables:
-  image_name: jitesoft/openjdk
-
-build:
+build:alpine:
   stage: build
-  image: docker:latest
+  image: registry.gitlab.com/jitesoft/dockerfiles/docker:latest
   variables:
-    TAGS: "latest eap 13"
-  services:
-    - docker:dind
-  before_script:
-    - echo ${CI_JOB_TOKEN} | docker login -u gitlab-ci-token registry.gitlab.com --password-stdin
-    - echo ${DOCKER_HUB_PASSWORD} | docker login -u ${DOCKER_HUB_USER} --password-stdin
-    - docker pull ${CI_REGISTRY_IMAGE}:latest # Using the latest build as cache.
+    TAGS: "latest eap 14"
   script:
     - docker build --cache-from ${CI_REGISTRY_IMAGE}:latest -t ${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHA} .
     - |
       for tag in $TAGS; do
-        docker tag ${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHA} ${image_name}:${tag}
-        docker push ${image_name}:${tag}
+
+        docker tag ${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHA} ${CI_REGISTRY_IMAGE}:${tag}
+        docker tag ${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHA} quay.io/jitesoft/openjdk:${tag}
+        docker tag ${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHA} jitesoft/openjdk:${tag}
+        docker push jitesoft/openjdk:${tag}
+        docker push quay.io/jitesoft/openjdk:${tag}
+        docker push ${CI_REGISTRY_IMAGE}:${tag}
       done
-    - docker tag ${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHA} ${CI_REGISTRY_IMAGE}:latest
-    - docker push ${CI_REGISTRY_IMAGE}:latest
   tags:
     - jitesoft
+    - docker
