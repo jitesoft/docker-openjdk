@@ -1,5 +1,9 @@
+include:
+  - https://gitlab.com/jitesoft/gitlab-ci-lib/raw/master/container_scan-v2.yml
+
 stages:
   - build
+  - scan
 
 build:alpine:
   stage: build
@@ -10,7 +14,6 @@ build:alpine:
     - docker build --cache-from ${CI_REGISTRY_IMAGE}:latest -t ${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHA} .
     - |
       for tag in $TAGS; do
-
         docker tag ${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHA} ${CI_REGISTRY_IMAGE}:${tag}
         docker tag ${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHA} quay.io/jitesoft/openjdk:${tag}
         docker tag ${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHA} jitesoft/openjdk:${tag}
@@ -20,4 +23,9 @@ build:alpine:
       done
   tags:
     - jitesoft
-    - docker
+
+scan:
+  extends: .container_scanning
+  variables:
+    SCANNING_IMAGE_NAME: "${CI_REGISTRY_IMAGE}:latest"
+    GIT_STRATEGY: none
